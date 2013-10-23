@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+</head>
+<body>
+<script>
+function readTextFile(file) {
+	var rawFile = new XMLHttpRequest();
+	rawFile.open("GET", file, true);
+	rawFile.onreadystatechange = function () {
+		if(rawFile.readyState === 4) {
+			if(rawFile.status === 200 || rawFile.status == 0) {
+				handleImgList(rawFile.responseText);
+				}
+			}
+		}
+	rawFile.send(null);
+	}
+function handleImgList(list) {
+	var arr = list.split("\n");
+	for(var i = 0; i<3; i++) {
+		var img_div = document.querySelector("#images");
+		var img = new Image();
+		img.onload = function() {
+			console.log(this.width + ' ' + this.height);
+			}
+		img.src=img_path+arr[i];
+		img_div.appendChild(img);
+		}
+	}
+var img_path = document.URL.substr(0, document.URL.length-"_org/index.html".length)
+var img_list = document.URL.substr(0, document.URL.length-"index.html".length) + "files"
+readTextFile(img_list);
+</script>
+<div id="images"></div>
+</body>
+</html>
