@@ -2,9 +2,14 @@
 <html>
 <head>
 <meta charset="utf-8">
+<script src="FileSaver.js/FileSaver.js"></script>
 </head>
 <body>
+<div id="info"></div>
+<div id="images"></div>
+<div id="tmp_txt" style="display: none;"></div>
 <script>
+var IMG_MAX_DIM = 300;
 function readTextFile(file) {
 	var rawFile = new XMLHttpRequest();
 	rawFile.open("GET", file, true);
@@ -19,20 +24,54 @@ function readTextFile(file) {
 	}
 function handleImgList(list) {
 	var arr = list.split("\n");
-	for(var i = 0; i<3; i++) {
+	for(var i = 0; i<10; i++) {
 		var img_div = document.querySelector("#images");
+		var a = document.createElement("a");
+		a.style="cursor: pointer;";
+		a.setAttribute("onclick", "receiveTags('"+arr[i]+"')");
 		var img = new Image();
 		img.onload = function() {
-			console.log(this.width + ' ' + this.height);
+			if(this.width > this.height) {
+				this.width = IMG_MAX_DIM;
+				this.height = IMG_MAX_DIM * (this.height/this.width);
+				}
+			else {
+				this.height = IMG_MAX_DIM;
+				this.width = IMG_MAX_DIM * (this.width/this.height);
+				}
 			}
 		img.src=img_path+arr[i];
-		img_div.appendChild(img);
+		img_div.appendChild(a);
+		a.appendChild(img);
 		}
 	}
+function receiveTags(fname) {
+	//TODO: load prior values
+	var taglist = window.prompt("tags for "+fname,"");
+	addTags(fname, taglist);
+	}
+function addTags(fname, taglist) {
+	var tmp_txt = document.querySelector("#tmp_txt");
+	try {
+		var arr = JSON.parse(tmp_txt.innerHTML);
+		}
+	catch(e) {
+		var arr = [];
+		}
+	var obj = {};
+	obj[fname] = taglist.split(",");
+	arr.push(obj)
+	tmp_txt.innerHTML = JSON.stringify(arr);
+	}
+function saveTags() {
+	var tmp_txt = document.querySelector("#tmp_txt");
+	var blob = new Blob([tmp_txt.textContent]);
+	var blob_url = window.URL.createObjectURL(blob);
+	saveAs(blob, "tags");
+	}
 var img_path = document.URL.substr(0, document.URL.length-"_org/index.html".length)
-var img_list = document.URL.substr(0, document.URL.length-"index.html".length) + "files"
+var img_list = img_path+"_org/files"
 readTextFile(img_list);
 </script>
-<div id="images"></div>
 </body>
 </html>
