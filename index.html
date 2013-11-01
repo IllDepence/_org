@@ -15,9 +15,9 @@
 var IMG_MAX_DIM = 300;
 var MAX_IMG_DISP = 10;
 function applyFilter(text) {
-	// TODO: actually apply a filter
-	var img_list = sessionStorage.getItem("img_list");
-	displayImages(img_list);
+	var obj = JSON.parse(sessionStorage.getItem("tag_obj"));
+	img_arr = obj[text];
+	displayImages(img_arr);
 	}
 function readLocalTextFile(file, purpose) {
 	var rawFile = new XMLHttpRequest();
@@ -26,7 +26,9 @@ function readLocalTextFile(file, purpose) {
 		if(rawFile.readyState === 4) {
 			if(rawFile.status === 200 || rawFile.status == 0) {
 				if(purpose == "img_list")
-					sessionStorage.setItem("img_list", rawFile.responseText);
+					var arr = rawFile.responseText.split("\n");
+					if(typeof(arr) != "undefined")
+						sessionStorage.setItem("img_list", JSON.stringify(arr));
 				if(purpose == "tags")
 					sessionStorage.setItem("tag_obj", rawFile.responseText);
 				}
@@ -34,10 +36,11 @@ function readLocalTextFile(file, purpose) {
 		}
 	rawFile.send(null);
 	}
-function displayImages(list) {
-	var arr = list.split("\n");
+function displayImages(arr) {
+	var img_div = document.querySelector("#images");
+	img_div.innerHTML = "";
+	if(typeof(arr) == "undefined") return;
 	for(var i = 0; i<MAX_IMG_DISP; i++) {
-		var img_div = document.querySelector("#images");
 		var a = document.createElement("a");
 		a.style="cursor: pointer;";
 		a.setAttribute("onclick", "receiveTags('"+arr[i]+"')");
@@ -58,23 +61,36 @@ function displayImages(list) {
 		}
 	}
 function getTagObject() {
-	var obj = JSON.parse(sessionStorage.getItem("tag_obj"));
-	if(obj == null)
+	try {
+		var obj = JSON.parse(sessionStorage.getItem("tag_obj"));
+		if(obj == null)
+			var obj = {};
+		}
+	catch(e) {
 		var obj = {};
+		}
 	return obj;
 	}
 function receiveTags(fname) {
 	var obj = getTagObject();
 	var exTags = [];
-	if(typeof(obj[fname]) != "undefined")
-		exTags = (obj[fname]);
+	for(var tag in obj) {
+		if(obj[tag].indexOf(fname) != -1)
+			exTags.push(tag);
+		}
 	var taglist = window.prompt("tags for "+fname, exTags.toString(","));
 	if(taglist != null)
 		addTags(fname, taglist);
 	}
 function addTags(fname, taglist) {
 	var obj = getTagObject();
-	obj[fname] = taglist.split(",");
+	var tag_arr = taglist.split(",");
+	for(var i=0; i<tag_arr.length; i++) {
+		if(tag_arr.indexOf(fname) == -1)
+			if(typeof(obj[tag_arr[i]]) == "undefined")
+				obj[tag_arr[i]] = [];
+			obj[tag_arr[i]].push(fname);
+		}
 	sessionStorage.setItem("tag_obj", JSON.stringify(obj));
 	}
 function saveTags() {
