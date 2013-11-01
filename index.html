@@ -21,7 +21,8 @@ function applyFilter(text) {
 		var fin_img_arr = [];
 		// tags
 		var obj = getTagObject();
-		for(var i=0; i<MAX_IMG_DISP;) {
+		var j=0;
+		for(var i=0; j<MAX_IMG_DISP; i++) {
 			if(i>huge_img_arr.length) break;
 			var tagged = 0;
 			for(var tag in obj) {
@@ -30,12 +31,8 @@ function applyFilter(text) {
 					}
 				}
 			if(tagged == 0) {
-				console.log("untagged "+i);
 				fin_img_arr.push(huge_img_arr[i]);
-				i++;
-				}
-			else {
-				console.log("tagged "+i);
+				j++;
 				}
 			}
 		displayImages(fin_img_arr);
