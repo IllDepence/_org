@@ -6,14 +6,29 @@
 </head>
 <body>
 <div style="margin-bottom: 20px">
-	<input type="button" onclick="saveTags()" value="save tags" />
+	<p><input type="button" onclick="saveTags()" value="save tags" />
 	<input type="text" oninput="applyFilter(this.value)" />
+	number of tagged images: <span id="tagged_count"></span></p>
 </div>
 <div id="info"></div>
 <div id="images"></div>
 <script>
 var IMG_MAX_DIM = 300;
 var MAX_IMG_DISP = 10;
+function showTagCount() {
+	var tag_obj = JSON.parse(sessionStorage.getItem("tag_obj"));
+	var tagged_files = [];
+	for(tag in tag_obj) {
+		var arr=tag_obj[tag];
+		for(var i=0; i<arr.length; i++) {
+			var f=arr[i];
+			if(tagged_files.indexOf(f)==-1)
+				tagged_files.push(f)
+			}
+		}
+	var tcSpan = document.querySelector("#tagged_count");
+	tcSpan.innerHTML = tagged_files.length;
+	}
 function applyFilter(text) {
 	if(text == "/untagged") {
 		// images
@@ -49,6 +64,15 @@ function applyFilter(text) {
 			}
 		displayImages(fin_img_arr);
 		}
+	}
+function cleanTagGroups() {
+	var obj = getTagObject();
+	var clean = [];
+	for(var tag in obj) {
+		clean = obj[tag].filter(function(elem, pos) {return obj[tag].indexOf(elem) == pos;});
+		obj[tag] = clean;
+		}
+	sessionStorage.setItem("tag_obj", JSON.stringify(obj));
 	}
 function intersectArrays(arr, brr) {
 	var res = [];
@@ -133,15 +157,17 @@ function addTags(fname, taglist) {
 	sessionStorage.setItem("tag_obj", JSON.stringify(obj));
 	}
 function saveTags() {
+	cleanTagGroups();
 	var blob = new Blob([sessionStorage.getItem("tag_obj")]);
 	var blob_url = window.URL.createObjectURL(blob);
-	saveAs(blob, "tags");
+	saveAs(blob, "tags_"+new Date().getTime());
 	}
 var img_path = document.URL.substr(0, document.URL.length-"_org/index.html".length);
 var img_list = img_path+"_org/files";
 var tag_file = img_path+"_org/tags";
 readLocalTextFile(img_list, "img_list");
 readLocalTextFile(tag_file, "tags");
+showTagCount();
 </script>
 </body>
 </html>
