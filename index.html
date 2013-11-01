@@ -5,26 +5,38 @@
 <script src="FileSaver.js/FileSaver.js"></script>
 </head>
 <body>
+<div style="margin-bottom: 20px">
+	<input type="button" onclick="saveTags()" value="save tags" />
+	<input type="text" oninput="applyFilter(this.value)" />
+</div>
 <div id="info"></div>
 <div id="images"></div>
-<div id="tmp_txt" style="display: none;"></div>
 <script>
 var IMG_MAX_DIM = 300;
-function readTextFile(file) {
+var MAX_IMG_DISP = 10;
+function applyFilter(text) {
+	// TODO: actually apply a filter
+	var img_list = sessionStorage.getItem("img_list");
+	displayImages(img_list);
+	}
+function readLocalTextFile(file, purpose) {
 	var rawFile = new XMLHttpRequest();
 	rawFile.open("GET", file, true);
 	rawFile.onreadystatechange = function () {
 		if(rawFile.readyState === 4) {
 			if(rawFile.status === 200 || rawFile.status == 0) {
-				handleImgList(rawFile.responseText);
+				if(purpose == "img_list")
+					sessionStorage.setItem("img_list", rawFile.responseText);
+				if(purpose == "tags")
+					sessionStorage.setItem("tag_obj", rawFile.responseText);
 				}
 			}
 		}
 	rawFile.send(null);
 	}
-function handleImgList(list) {
+function displayImages(list) {
 	var arr = list.split("\n");
-	for(var i = 0; i<10; i++) {
+	for(var i = 0; i<MAX_IMG_DISP; i++) {
 		var img_div = document.querySelector("#images");
 		var a = document.createElement("a");
 		a.style="cursor: pointer;";
@@ -45,33 +57,36 @@ function handleImgList(list) {
 		a.appendChild(img);
 		}
 	}
+function getTagObject() {
+	var obj = JSON.parse(sessionStorage.getItem("tag_obj"));
+	if(obj == null)
+		var obj = {};
+	return obj;
+	}
 function receiveTags(fname) {
-	//TODO: load prior values
-	var taglist = window.prompt("tags for "+fname,"");
-	addTags(fname, taglist);
+	var obj = getTagObject();
+	var exTags = [];
+	if(typeof(obj[fname]) != "undefined")
+		exTags = (obj[fname]);
+	var taglist = window.prompt("tags for "+fname, exTags.toString(","));
+	if(taglist != null)
+		addTags(fname, taglist);
 	}
 function addTags(fname, taglist) {
-	var tmp_txt = document.querySelector("#tmp_txt");
-	try {
-		var arr = JSON.parse(tmp_txt.innerHTML);
-		}
-	catch(e) {
-		var arr = [];
-		}
-	var obj = {};
+	var obj = getTagObject();
 	obj[fname] = taglist.split(",");
-	arr.push(obj)
-	tmp_txt.innerHTML = JSON.stringify(arr);
+	sessionStorage.setItem("tag_obj", JSON.stringify(obj));
 	}
 function saveTags() {
-	var tmp_txt = document.querySelector("#tmp_txt");
-	var blob = new Blob([tmp_txt.textContent]);
+	var blob = new Blob([sessionStorage.getItem("tag_obj")]);
 	var blob_url = window.URL.createObjectURL(blob);
 	saveAs(blob, "tags");
 	}
-var img_path = document.URL.substr(0, document.URL.length-"_org/index.html".length)
-var img_list = img_path+"_org/files"
-readTextFile(img_list);
+var img_path = document.URL.substr(0, document.URL.length-"_org/index.html".length);
+var img_list = img_path+"_org/files";
+var tag_file = img_path+"_org/tags";
+readLocalTextFile(img_list, "img_list");
+readLocalTextFile(tag_file, "tags");
 </script>
 </body>
 </html>
