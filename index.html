@@ -15,9 +15,51 @@
 var IMG_MAX_DIM = 300;
 var MAX_IMG_DISP = 10;
 function applyFilter(text) {
-	var obj = JSON.parse(sessionStorage.getItem("tag_obj"));
-	img_arr = obj[text];
-	displayImages(img_arr);
+	if(text == "/untagged") {
+		// images
+		var huge_img_arr = JSON.parse(sessionStorage.getItem("img_list"));
+		var fin_img_arr = [];
+		// tags
+		var obj = getTagObject();
+		for(var i=0; i<MAX_IMG_DISP;) {
+			if(i>huge_img_arr.length) break;
+			var tagged = 0;
+			for(var tag in obj) {
+				if(obj[tag].indexOf(huge_img_arr[i]) != -1) {
+					tagged = 1;
+					}
+				}
+			if(tagged == 0) {
+				console.log("untagged "+i);
+				fin_img_arr.push(huge_img_arr[i]);
+				i++;
+				}
+			else {
+				console.log("tagged "+i);
+				}
+			}
+		displayImages(fin_img_arr);
+		}
+	else {
+		var obj = getTagObject();
+		var tag_arr = text.split(",");
+		for(var i=0; i<tag_arr.length; i++) {
+			if(i < 0) {
+				var tmp_img_arr = obj[tag_arr[i]];
+				fin_img_arr = intersectArrays(fin_img_arr, tmp_img_arr);
+				}
+			var fin_img_arr = obj[tag_arr[i]];
+			}
+		displayImages(fin_img_arr);
+		}
+	}
+function intersectArrays(arr, brr) {
+	var res = [];
+	for(var i=0; i<arr.length; i++) {
+		if(brr.indexOf(arr[i]) !== -1)
+			res.push(arr[i]);
+		}
+	return res;
 	}
 function readLocalTextFile(file, purpose) {
 	var rawFile = new XMLHttpRequest();
@@ -40,7 +82,7 @@ function displayImages(arr) {
 	var img_div = document.querySelector("#images");
 	img_div.innerHTML = "";
 	if(typeof(arr) == "undefined") return;
-	for(var i = 0; i<MAX_IMG_DISP; i++) {
+	for(var i=0; i<arr.length; i++) {
 		var a = document.createElement("a");
 		a.style="cursor: pointer;";
 		a.setAttribute("onclick", "receiveTags('"+arr[i]+"')");
