@@ -56,11 +56,12 @@ function applyFilter(text) {
 		var obj = getTagObject();
 		var tag_arr = text.split(",");
 		for(var i=0; i<tag_arr.length; i++) {
-			if(i < 0) {
+			if(i > 0) {
 				var tmp_img_arr = obj[tag_arr[i]];
 				fin_img_arr = intersectArrays(fin_img_arr, tmp_img_arr);
 				}
-			var fin_img_arr = obj[tag_arr[i]];
+			if((i+1)<tag_arr.length || tag_arr.length == 1)
+				var fin_img_arr = obj[tag_arr[i]];
 			}
 		displayImages(fin_img_arr);
 		}
@@ -92,6 +93,7 @@ function readLocalTextFile(file, purpose) {
 					var arr = rawFile.responseText.split("\n");
 					if(typeof(arr) != "undefined")
 						sessionStorage.setItem("img_list", JSON.stringify(arr));
+					showTagCount();
 				if(purpose == "tags")
 					sessionStorage.setItem("tag_obj", rawFile.responseText);
 				}
@@ -167,7 +169,6 @@ var img_list = img_path+"_org/files";
 var tag_file = img_path+"_org/tags";
 readLocalTextFile(img_list, "img_list");
 readLocalTextFile(tag_file, "tags");
-showTagCount();
 </script>
 </body>
 </html>
